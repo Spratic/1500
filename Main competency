@@ -1,0 +1,28 @@
+from time import sleep
+from motor import Motor
+from machine import Pin
+
+print("Hello, world!")
+
+IR_sensor = Pin()       # TODO declare pin
+motor_left = Motor("left", "D6", "D7", "D4")
+motor_right = Motor("right", "D8", "D9", "D5")
+led = Pin()
+reading = 0
+
+if (reading == 0):
+    if (dist<400):                      # Rotate if obstacle and no black square
+        motor_left.set_forwards()
+        motor_right.set_backwards()
+        motor_left.duty(50)
+        motor_right.duty(50)
+
+    time.sleep(0.1)
+    reading = IR_sensor
+    led.value(reading)
+
+    else:                               # Forward if no obstacle and no black square
+        motor_left.set_forwards()
+        motor_right.set_forwards()
+        motor_left.duty(50)
+        motor_right.duty(50)
