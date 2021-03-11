@@ -1,0 +1,14 @@
+import machine
+from machine import Pin
+import time
+
+sensor = Pin("A0", Pin.IN)      # 'Pin' assigned to a variable
+reading = 0                     # Declare a variable "sensor_reading"
+led = Pin("D13", Pin.out)       # LED corresponds with sensor
+
+while True:
+    time.sleep(0.1)
+    reading = sensor            # Read the sensor's value into sensor_reading here
+    print(reading)              # Prints to REPL
+
+    led.value(reading)          # LED corresponds with sensor
