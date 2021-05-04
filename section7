@@ -1,0 +1,167 @@
+from pyb import Pin, ADC, Servo
+from motor import Motor
+from time import sleep
+from encoder import Encoder
+import ultrasonic
+
+
+def clicksneeded(angle):
+    from math import pi
+    wheeldiameter = 65
+    """diameter in mm"""
+    wheelbase = 140
+    """wheel base in mm"""
+    angelturn = angle * pi/180
+    """defines the angle we want to turn"""
+    turningradius = wheelbase / 2
+    cee = wheeldiameter * pi
+    length = angelturn * turningradius
+    total = (length/cee)*20
+    return round(total)
+
+
+# my_servo = servo(1)  # Servo on A0 on Nucleo board
+my_servo = Servo(2)
+my_servo1 = Servo(1)
+motor_left = Motor("left", "D6", "D7", "D4")
+motor_right = Motor("right", "D8", "D9", "D5")
+IR_SensorL = ADC(Pin('A3'))
+IR_SensorR = ADC(Pin('A2'))
+ENC_L = "D2"
+ENC_R = "D3"
+enc = Encoder(ENC_L, ENC_R)
+TRIG = "D11"
+ECHO = "D10"
+ultrasonic_sensor = ultrasonic.HCSR04(TRIG, ECHO)
+LPWM = 75
+RPWM = 78
+
+
+while True:
+    motor_left.set_forwards()
+    motor_right.set_forwards()
+    motor_left.duty(LPWM)
+    motor_right.duty(RPWM)
+    IR_L = IR_SensorL.read()
+    IR_R = IR_SensorR.read()
+    dist = ultrasonic_sensor
+    if IR_R < IR_L+20:
+        RPWM = 0
+        LPWM = 65
+    elif IR_L < IR_R + 20:
+        RPWM = 65
+        LPWM = 0
+    else:
+        motor_left.duty(0)
+        motor_right.duty(0)
+        # Positive sweep
+        for desired_angle in range(-90, 90, +1):  # Sweep from -90 degrees to 90 degrees in
+            # ...steps of 1
+            my_servo.angle(desired_angle)
+            my_servo1.angle(desired_angle)
+            # Tell servo to go to desired_angle
+            sleep(0.01)  # Waits 10ms for the servo to reach angle
+            if 100 < dist < 120 and IR_R > 500 and IR_L > 500:      # todo calibrate to IR range
+                clicksneeded(90-desired_angle)      # todo calibrate to sweep direction
+                LPWM = 66
+                RPWM = 68
+                motor_left.duty(LPWM)
+                motor_right.duty(RPWM)
+                Lenc = enc.get_left()
+                Renc = enc.get_right()
+                if Renc > Lenc:  # turning left
+                    if LPWM > 65:
+                        LPWM += -0.1
+                    else:
+                        RPWM += 0.1
+                    sleep(0.1)
+                    Lenc = enc.get_left()
+                    Renc = enc.get_right()
+                elif Lenc > Renc:  # turning right
+                    if LPWM < 70:
+                        LPWM += 0.1
+                    else:
+                        RPWM += -0.1
+                    sleep(0.1)
+                else:
+                    sleep(0.1)
+                    Lenc = enc.get_left()
+                    Renc = enc.get_right()
+                    dist = ultrasonic_sensor
+        # Negative sweep
+        for desired_angle in range(90, -90, -1):
+            # ...steps of -1
+            my_servo.angle(desired_angle)  # Tell servo to go to desired_angle
+            my_servo1.angle(desired_angle)
+            sleep(0.01)  # Waits 10ms for the servo to reach angle
+            if 100 < dist < 120 and IR_R > 500 and IR_L > 500:      # todo calibrate to IR range
+                clicksneeded(90-desired_angle)      # todo calibrate to sweep direction
+                LPWM = 66
+                RPWM = 68
+                motor_left.duty(LPWM)
+                motor_right.duty(RPWM)
+                Lenc = enc.get_left()
+                Renc = enc.get_right()
+                if Renc > Lenc:  # turning left
+                    if LPWM > 65:
+                        LPWM += -0.1
+                    else:
+                        RPWM += 0.1
+                    sleep(0.1)
+                    Lenc = enc.get_left()
+                    Renc = enc.get_right()
+                    dist = ultrasonic_sensor
+                elif Lenc > Renc:  # turning right
+                    if LPWM < 70:
+                        LPWM += 0.1
+                    else:
+                        RPWM += -0.1
+                    sleep(0.1)
+                    Lenc = enc.get_left()
+                    Renc = enc.get_right()
+                    dist = ultrasonic_sensor
+                else:
+                    sleep(0.1)
+                    Lenc = enc.get_left()
+                    Renc = enc.get_right()
+                    dist = ultrasonic_sensor
+
+while True:
+    motor_left.set_forwards()
+    motor_right.set_forwards()
+    motor_left.duty(LPWM)
+    motor_right.duty(RPWM)
+    IR_L = IR_SensorL.read()
+    IR_R = IR_SensorR.read()
+    dist = ultrasonic_sensor
+    if IR_R < IR_L+20:
+        RPWM = 0
+        LPWM = 65
+    elif IR_L < IR_R + 20:
+        RPWM = 65
+        LPWM = 0
+    else:
+        LPWM = 66
+        RPWM = 68
+        motor_left.duty(LPWM)
+        motor_right.duty(RPWM)  # approx straight from graph produced from workshop
+        Lenc = enc.get_left()
+        Renc = enc.get_right()
+        if Renc > Lenc:  # turning left
+            if LPWM > 65:
+                LPWM += -0.1
+            else:
+                RPWM += 0.1
+            sleep(0.1)
+            Lenc = enc.get_left()
+            Renc = enc.get_right()
+        elif Lenc > Renc:  # turning right
+            if LPWM < 70:
+                LPWM += 0.1
+            else:
+                RPWM += -0.1
+            sleep(0.1)
+        else:
+            sleep(0.1)
+            Lenc = enc.get_left()
+            Renc = enc.get_right()
